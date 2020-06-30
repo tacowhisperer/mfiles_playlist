@@ -14,8 +14,16 @@ const s = path.sep;
  * Generates an HTML list of music metadata from a directory of music files.
  * @param  {String} directory The path to where the music files are stored.
  */
-function app(directory) {
-	console.log(`You chose the directory "${directory}"`);
+async function app(directory) {
+	fs.readdir(directory, (err, files) => {
+		if (err) throw err;
+
+		for (let i = 0; i < files.length; i++) {
+			const metadata = await mm.parseFile(files[i]);
+
+			console.log(JSON.stringify(metadata, null, 8));
+		}
+	});
 }
 
 /**
