@@ -1,0 +1,22 @@
+{
+  "name": "mfiles_playlist",
+  "version": "1.0.0",
+  "description": "Converts a directory of music files into an injectable HTML table playlist.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tacowhisperer",
+  "license": "ISC",
+  "dependencies": {
+    "music-metadata": "^6.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tacowhisperer/mfiles_playlist.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tacowhisperer/mfiles_playlist/issues"
+  },
+  "homepage": "https://github.com/tacowhisperer/mfiles_playlist#readme"
+}
