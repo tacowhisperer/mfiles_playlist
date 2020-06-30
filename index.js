@@ -14,14 +14,18 @@ const s = path.sep;
  * Generates an HTML list of music metadata from a directory of music files.
  * @param  {String} directory The path to where the music files are stored.
  */
-async function app(directory) {
-	fs.readdir(directory, (err, files) => {
+function app(directory) {
+	fs.readdir(directory, async (err, files) => {
 		if (err) throw err;
 
 		for (let i = 0; i < files.length; i++) {
-			const metadata = await mm.parseFile(files[i]);
-
-			console.log(JSON.stringify(metadata, null, 8));
+			try {
+				const metadata = await mm.parseFile(`${directory}${s}${files[i]}`);
+				fs.writeFileSync('metadata.json', JSON.stringify(metadata, null, 8));
+				// console.log(JSON.stringify(metadata, null, 8));
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	});
 }
@@ -61,7 +65,7 @@ fs.readdir('.', (err, files) => {
 		const file = files[i];
 
 		// Skip the node_modules directory since that's part of 
-		if (file !== 'node_modules') {
+		if (file !== 'node_modules' && file !== ".git") {
 			try {
 				if (fs.lstatSync(`.${s}${files[i]}`).isDirectory())
 					addOption(menu, files[i], () => app(path.resolve(files[i])));
