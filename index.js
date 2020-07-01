@@ -23,18 +23,30 @@ function app(directory) {
 		for (let i = 0; i < files.length; i++) {
 			try {
 				const metadata = (await mm.parseFile(`${directory}${s}${files[i]}`)).common;
+				const title = metadata.title;
+				const artist = metadata.artist;
+				const album = metadata.album;
 
 				// We only want basic information
+				const song  =   `<p class="song_title">
+							${title}
+						</p>
+						<p class="song_artist_album">
+							${artist} | ${album}
+						</p>`;
+
 				let image = '<img></img>';
-				if (metadata.picture.length) {
+				if (metadata.picture instanceof Array) {
 					const pic = metadata.picture[0];
 					const imgBuffer = await sharp(pic.data).resize(100, 100).toBuffer();
+
+
 					image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
 				}
 
-				const song = `<p>${metadata.artist} - ${metadata.title} | ${metadata.album}</p>`;
 				table += `<tr><td>${image}</td><td>${song}</td></tr>`;
 			} catch (e) {
+				console.error(`Failed extraction of data for file "${files[i]}"`);
 				console.error(e);
 			}
 		}
