@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const mm = require('music-metadata');
+const sharp = require('sharp');
 
 const rl = readline.createInterface({
 	input: process.stdin,
@@ -18,15 +19,28 @@ function app(directory) {
 	fs.readdir(directory, async (err, files) => {
 		if (err) throw err;
 
+		let table = '';
 		for (let i = 0; i < files.length; i++) {
 			try {
-				const metadata = await mm.parseFile(`${directory}${s}${files[i]}`);
-				fs.writeFileSync('metadata.json', JSON.stringify(metadata, null, 8));
-				// console.log(JSON.stringify(metadata, null, 8));
+				const metadata = (await mm.parseFile(`${directory}${s}${files[i]}`)).common;
+
+				// We only want basic information
+				let image = '<img></img>';
+				if (metadata.picture.length) {
+					const pic = metadata.picture[0];
+					const imgBuffer = await sharp(pic.data).resize(100, 100).toBuffer();
+					image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
+				}
+
+				const song = `<p>${metadata.artist} - ${metadata.title} | ${metadata.album}</p>`;
+				table += `<tr><td>${image}</td><td>${song}</td></tr>`;
 			} catch (e) {
 				console.error(e);
 			}
 		}
+
+		// Write the output playlist to an HTML file
+		fs.writeFileSync('playlist.html', `<table>${table}</table>`);
 	});
 }
 
