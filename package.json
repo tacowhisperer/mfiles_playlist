@@ -9,7 +9,8 @@
   "author": "tacowhisperer",
   "license": "ISC",
   "dependencies": {
-    "music-metadata": "^6.4.0"
+    "music-metadata": "^6.4.0",
+    "sharp": "^0.25.4"
   },
   "repository": {
     "type": "git",
