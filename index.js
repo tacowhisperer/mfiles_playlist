@@ -16,25 +16,25 @@ const s = path.sep;
  * @param  {String} directory The path to where the music files are stored.
  */
 function app(directory) {
+	console.log('');
+	console.log(`Processing music files in "${directory}"`);
+
 	fs.readdir(directory, async (err, files) => {
 		if (err) throw err;
 
-		let table = '';
+		const fileData = [];
 		for (let i = 0; i < files.length; i++) {
+			process.stdout.write(`Progress: ${Math.round(10000 * (i + 1) / files.length) / 100}%${'\033[0G'}`);
+
 			try {
 				const metadata = (await mm.parseFile(`${directory}${s}${files[i]}`)).common;
+				
 				const title = metadata.title;
 				const artist = metadata.artist;
 				const album = metadata.album;
+				const track = metadata.track;
 
 				// We only want basic information
-				const song  =   `<p class="song_title">
-							${title}
-						</p>
-						<p class="song_artist_album">
-							${artist} | ${album}
-						</p>`;
-
 				let image = '<img></img>';
 				if (metadata.picture instanceof Array) {
 					const pic = metadata.picture[0];
@@ -44,15 +44,58 @@ function app(directory) {
 					image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
 				}
 
-				table += `<tr><td>${image}</td><td>${song}</td></tr>`;
+				fileData.push({
+					artist: artist,
+					album: album,
+					title: title,
+					track: track,
+					cover: image
+				});
 			} catch (e) {
 				console.error(`Failed extraction of data for file "${files[i]}"`);
 				console.error(e);
 			}
 		}
 
+		// Sort the playlist information on artist, then by album, finally by track number.
+		fileData.sort((a, b) => {
+			if (a.artist < b.artist)
+				return -1;
+			else if (a.artist > b.artist)
+				return 1;
+
+			// Same artist, so sort by album
+			if (a.album < b.album)
+				return -1;
+			else if (a.album > b.album)
+				return 1;
+
+			// Same album, so sort by track number
+			if (a.track.no < b.track.no)
+				return -1;
+			else if (a.track.no > b.track.no)
+				return 1;
+
+			return 0;
+		});
+
+		const table = fileData.map(data => {
+			const song  =   `<p class="song_title">
+						${data.title}
+					</p>
+					<p class="song_artist_album">
+						${data.artist} | ${data.album}${data.track.no ? ` | Track No. ${data.track.no}` : ''}
+					</p>`;
+
+			return `<tr><td>${data.cover}</td><td>${song}</td></tr>`;
+		}).join('');
+
 		// Write the output playlist to an HTML file
-		fs.writeFileSync('playlist.html', `<table>${table}</table>`);
+		fs.writeFileSync('playlist.html', `<html><body><table>${table}</table></body></html>`);
+
+		console.log('\r');
+		console.log('Done.')
+		console.log('');
 	});
 }
 
