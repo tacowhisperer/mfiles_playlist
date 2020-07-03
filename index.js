@@ -57,7 +57,7 @@ function app(directory, output = './playlist') {
 				let imageBuffer = null;
 				let imageType = null;
 				if (pic) {
-					imageBuffer = await sharp(pic.data).resize(140, 140).toBuffer();
+					imageBuffer = await sharp(pic.data).resize(100, 100).toBuffer();
 					//image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
 					imageType = getMediaExt(pic.format);
 				}
@@ -125,7 +125,7 @@ function app(directory, output = './playlist') {
 
 			let img = '';
 			if (artistsMap[artist][album].cover !== null)
-				img = `<img src="./${COVER_DIR}/${sanitize(`${artist}-${album}${artistsMap[artist][album].cover}`)}"></img>`;
+				img = `<img src="./${COVER_DIR}/${encodeURIComponent(sanitize(`${artist}-${album}${artistsMap[artist][album].cover}`))}"></img>`;
 
 			return `<tr><td>${img}</td><td>${song}</td></tr>`;
 		}))).join('\n');
