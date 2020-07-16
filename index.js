@@ -57,7 +57,7 @@ function app(directory, output = './playlist') {
 				let imageBuffer = null;
 				let imageType = null;
 				if (pic) {
-					imageBuffer = await sharp(pic.data).resize(100, 100).toBuffer();
+					imageBuffer = await sharp(pic.data, {failOnError: false}).resize(100, 100).toBuffer();
 					//image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
 					imageType = getMediaExt(pic.format);
 				}
