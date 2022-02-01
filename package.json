@@ -11,7 +11,7 @@
   "dependencies": {
     "music-metadata": "^6.4.0",
     "sanitize-filename": "^1.6.3",
-    "sharp": "^0.25.4"
+    "sharp": "^0.29.3"
   },
   "repository": {
     "type": "git",

@@ -12,6 +12,8 @@ const rl = readline.createInterface({
 
 const s = path.sep;
 
+const ICO_SIZE = 90;
+
 /**
  * Generates an HTML list of music metadata from a directory of music files.
  * @param  {String} directory The path to where the music files are stored.
@@ -42,50 +44,53 @@ function app(directory, output = './playlist') {
 
 		const artistsMap = {};
 		for (let i = 0; i < files.length; i++) {
-			process.stdout.write(`Progress: ${Math.round(10000 * (i + 1) / files.length) / 100}%${'\033[0G'}`);
+			process.stdout.write(`Progress: ${i + 1}/${files.length} - ${Math.round(10000 * (i + 1) / files.length) / 100}%${'\033[0G'}`);
 
-			try {
-				const metadata = (await mm.parseFile(`${directory}${s}${files[i]}`)).common;
-				
-				const title = metadata.title;
-				const artist = metadata.artist;
-				const album = metadata.album;
-				const track = metadata.track;
+			// Skip AlbumArt images injected by Windows media player.
+			if (!files[i].match(/^AlbumArt_/)) {
+				try {
+					const metadata = (await mm.parseFile(`${directory}${s}${files[i]}`)).common;
+					
+					const title = metadata.title;
+					const artist = metadata.artist;
+					const album = metadata.album;
+					const track = metadata.track;
 
-				// We only want basic information
-				let pic = metadata.picture instanceof Array ? metadata.picture[0] : false;
-				let imageBuffer = null;
-				let imageType = null;
-				if (pic) {
-					imageBuffer = await sharp(pic.data, {failOnError: false}).resize(100, 100).toBuffer();
-					//image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
-					imageType = getMediaExt(pic.format);
+					// We only want basic information
+					let pic = metadata.picture instanceof Array ? metadata.picture[0] : false;
+					let imageBuffer = null;
+					let imageType = null;
+					if (pic) {
+						imageBuffer = await sharp(pic.data, {failOnError: false}).resize(ICO_SIZE, ICO_SIZE).toBuffer();
+						//image = `<img src="data:${pic.format};base64,${imgBuffer.toString('base64')}"></img>`;
+						imageType = getMediaExt(pic.format);
+					}
+
+					// Add the missing artist if not available
+					if (!(artistsMap[artist] instanceof Object)) {
+						artistsMap[artist] = {
+							__albums: new Set([])
+						};
+					}
+
+					// Add the missing album if not available
+					if (!(artistsMap[artist][album] instanceof Object)) {
+						fs.writeFileSync(`${OUTPUT_DIR}${path.sep}${COVER_DIR}${path.sep}${sanitize(`${artist}-${album}${getMediaExt(pic.format)}`)}`, imageBuffer);
+						artistsMap[artist][album] = {
+							cover: imageType,
+							tracks: []
+						};
+					}
+
+					artistsMap[artist].__albums.add(album);
+					artistsMap[artist][album].tracks.push({
+						title: title,
+						track: track.no
+					});
+				} catch (e) {
+					console.error(`Failed extraction of data for file "${files[i]}"`);
+					console.error(e);
 				}
-
-				// Add the missing artist if not available
-				if (!(artistsMap[artist] instanceof Object)) {
-					artistsMap[artist] = {
-						__albums: new Set([])
-					};
-				}
-
-				// Add the missing album if not available
-				if (!(artistsMap[artist][album] instanceof Object)) {
-					fs.writeFileSync(`${OUTPUT_DIR}${path.sep}${COVER_DIR}${path.sep}${sanitize(`${artist}-${album}${getMediaExt(pic.format)}`)}`, imageBuffer);
-					artistsMap[artist][album] = {
-						cover: imageType,
-						tracks: []
-					};
-				}
-
-				artistsMap[artist].__albums.add(album);
-				artistsMap[artist][album].tracks.push({
-					title: title,
-					track: track.no
-				});
-			} catch (e) {
-				console.error(`Failed extraction of data for file "${files[i]}"`);
-				console.error(e);
 			}
 		}
 
